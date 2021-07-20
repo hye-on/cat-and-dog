@@ -1,0 +1,44 @@
+import os
+import numpy as np
+import tensorflow as tf
+
+SIZE = 62
+BATCH = 32
+EPOCHS = 10
+data_dir = os.path.join(os.getcwd(), 'drive/MyDrive/training_set')
+
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+#data augmentation : 적은 양의 데이터를 변형하여 인위적으로 많은 양의 데이터 생성
+
+#train_datagen
+ImageGenerator = ImageDataGenerator(rescale = 1./255, validation_split =.2)
+
+X_train = ImageGenerator.flow_from_directory(
+    data_dir, target_size = (SIZE, SIZE), subset = 'training')
+
+X_valid = ImageGenerator.flow_from_directory(
+    data_dir, target_size = (SIZE, SIZE), subset = 'validation')
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
+
+num_classes = 2
+
+model = Sequential()
+model.add(layers.InputLayer(input_shape = (SIZE, SIZE, 3)))
+model.add(layers.Conv2D(32, kernel_size = 3, strides = 1, padding='same', activation='relu'))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Conv2D(64, kernel_size=3, strides = 1, padding='same', activation='relu'))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Conv2D(128, kernel_size=3, strides = 1, padding='same', activation='relu'))
+model.add(layers.MaxPooling2D((2,2)))
+
+model.add(layers.Flatten())
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dense(256, activation='relu'))
+model.add(layers.Dense(num_classes, activation='sigmoid'))
+
+model.summary()
+
+model.compile(optimizer = 'adam', loss='binary_crossentropy', metrics=['accuracy'])
+history = model.fit(X_train, epochs=EPOCHS, validation_data = X_valid)
